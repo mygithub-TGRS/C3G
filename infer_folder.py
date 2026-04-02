@@ -38,15 +38,14 @@ def load_posefree_encoder(ckpt_path: str, device: str):
                 "+training=gaussian_head_multiview",
                 "mode=test",
                 "wandb.mode=disabled",
+                # Inference without foundation model features
+                "+model.encoder.feature_dim=0",
+                "+model.encoder.gaussian_feature_dim=0",
             ],
         )
 
     enc_cfg = cfg.model.encoder
     assert getattr(enc_cfg, "pose_free", False), "Encoder config must have pose_free=True"
-
-    # Build encoder (feature_dim=0 for inference without foundation model features)
-    enc_cfg.feature_dim = 0
-    enc_cfg.gaussian_feature_dim = 0
     encoder, _ = get_encoder(enc_cfg)
     encoder = encoder.to(device).eval()
 
