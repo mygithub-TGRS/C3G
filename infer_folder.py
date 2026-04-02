@@ -44,21 +44,38 @@ def load_posefree_encoder(ckpt_path: str, device: str):
 
     enc_cfg = cfg.model.encoder
 
-    # The base noposplat.yaml defines a closed struct that lacks VGGT-specific
-    # fields (freeze_backbone, decoder_depth, etc.).  Disable struct mode and
-    # fill in all EncoderVGGTCfg defaults so OmegaConf won't reject them.
-    OmegaConf.set_struct(enc_cfg, False)
-    vggt_defaults = {
+    # Recursively disable OmegaConf struct mode on the entire encoder config
+    # tree. The YAML defines a closed struct that lacks many fields whose
+    # defaults live only in the Python dataclasses (EncoderVGGTCfg,
+    # GaussianAdapterCfg, OpacityMappingCfg, etc.).
+    def _open_struct(node):
+        if OmegaConf.is_config(node):
+            OmegaConf.set_struct(node, False)
+            if OmegaConf.is_dict(node):
+                for v in node.values():
+                    _open_struct(v)
+    _open_struct(enc_cfg)
+
+    # EncoderVGGTCfg defaults not in YAML
+    for k, v in {
         "freeze_backbone": False,
         "decoder_depth": 2,
         "gaussians_per_token": 1,
         "feature_dim": 0,
         "gaussian_feature_dim": 0,
         "different_learnable_tokens": False,
-    }
-    for k, v in vggt_defaults.items():
+    }.items():
         if k not in enc_cfg:
             enc_cfg[k] = v
+
+    # GaussianAdapterCfg defaults not in YAML
+    for k, v in {
+        "scale_weight": 0.001,
+        "isotrophic_covariance": False,
+        "opacity_min": 0.0,
+    }.items():
+        if k not in enc_cfg.gaussian_adapter:
+            enc_cfg.gaussian_adapter[k] = v
 
     assert getattr(enc_cfg, "pose_free", False), "Encoder config must have pose_free=True"
     encoder, _ = get_encoder(enc_cfg)
