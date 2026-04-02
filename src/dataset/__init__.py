@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from .dataset_scannet_pose import DatasetScannetPose, DatasetScannetPoseCfgWrapper
 from ..misc.step_tracker import StepTracker
 from .dataset_re10k import DatasetRE10k, DatasetRE10kCfg, DatasetRE10kCfgWrapper, DatasetDL3DVCfgWrapper, \
-    DatasetScannetppCfgWrapper
+    DatasetScannetppCfgWrapper, DatasetNerfSyntheticCfgWrapper
 from .dataset_scannet import ScannetCfg, DatasetScannet, DatasetScannetCfgWrapper
 from .dataset_replica import DatasetReplica, ReplicaCfg, DatasetReplicaCfgWrapper
 from .types import Stage
@@ -15,13 +15,14 @@ DATASETS: dict[str, Dataset] = {
     "re10k": DatasetRE10k,
     "dl3dv": DatasetRE10k,
     "scannetpp": DatasetRE10k,
+    "nerf_synthetic": DatasetRE10k,
     "scannet_pose": DatasetScannetPose,
     "scannet": DatasetScannet,
     "replica": DatasetReplica,
 }
 
 
-DatasetCfgWrapper = DatasetRE10kCfgWrapper | DatasetDL3DVCfgWrapper | DatasetScannetppCfgWrapper | DatasetScannetPoseCfgWrapper | DatasetScannetCfgWrapper | DatasetReplicaCfgWrapper
+DatasetCfgWrapper = DatasetRE10kCfgWrapper | DatasetDL3DVCfgWrapper | DatasetScannetppCfgWrapper | DatasetNerfSyntheticCfgWrapper | DatasetScannetPoseCfgWrapper | DatasetScannetCfgWrapper | DatasetReplicaCfgWrapper
 DatasetCfg = DatasetRE10kCfg | ScannetCfg | ReplicaCfg
 
 

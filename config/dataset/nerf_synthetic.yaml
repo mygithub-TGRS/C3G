@@ -1,0 +1,15 @@
+defaults:
+  - base_dataset
+  - view_sampler: bounded
+  - optional view_sampler_dataset_specific_config@view_sampler: bounded_re10k
+
+name: nerf_synthetic
+roots: [datasets/nerf_synthetic]
+
+input_image_shape: [224, 224]
+original_image_shape: [800, 800]
+cameras_are_circular: false
+
+baseline_min: 1e-3
+baseline_max: 1e10
+max_fov: 100.0

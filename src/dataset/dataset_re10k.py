@@ -50,6 +50,11 @@ class DatasetScannetppCfgWrapper:
     scannetpp: DatasetRE10kCfg
 
 
+@dataclass
+class DatasetNerfSyntheticCfgWrapper:
+    nerf_synthetic: DatasetRE10kCfg
+
+
 class DatasetRE10k(IterableDataset):
     cfg: DatasetRE10kCfg
     stage: Stage

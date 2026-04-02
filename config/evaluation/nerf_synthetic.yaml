@@ -1,0 +1,41 @@
+# @package _global_
+
+defaults:
+  - /dataset@_group_.nerf_synthetic: nerf_synthetic
+  - override /model/encoder: noposplat
+  - override /model/encoder/backbone: croco
+  - override /loss: [mse, lpips]
+
+wandb:
+  name: nerf_synthetic
+  tags: [nerf_synthetic, 224x224]
+
+model:
+  encoder:
+    backbone:
+      name: vggt_multi
+    gaussian_adapter:
+      sh_degree: 0
+      clamping: -1
+    name: vggt
+    num_gaussians: 2048
+    gs_params_head_type: dpt_gs
+    pose_free: true
+    intrinsics_embed_loc: None
+    intrinsics_embed_type: None
+    pretrained_weights: './pretrained_weights/model.pt'
+    init_points: one_point
+  decoder:
+    make_scale_invariant: true
+    decrease_lpf_step: 1000
+
+dataset:
+  nerf_synthetic:
+    view_sampler:
+      warm_up_steps: 37500
+      num_context_views: 2
+
+test:
+  compute_scores: true
+  save_image: true
+  save_compare: true
