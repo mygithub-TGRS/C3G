@@ -93,15 +93,18 @@ def load_images_as_context(folder: Path, max_views: int, device: str):
     if max_views > 0:
         img_paths = img_paths[:max_views]
 
+    PATCH_SIZE = 14
     first = Image.open(img_paths[0]).convert("RGB")
     w0, h0 = first.size
+    # Resize to nearest multiple of patch size (VGGT uses 14x14 patches)
+    h0 = (h0 // PATCH_SIZE) * PATCH_SIZE
+    w0 = (w0 // PATCH_SIZE) * PATCH_SIZE
     to_tensor = transforms.ToTensor()
 
     tensors = []
     for p in img_paths:
         img = Image.open(p).convert("RGB")
-        if img.size != (w0, h0):
-            img = img.resize((w0, h0), Image.BILINEAR)
+        img = img.resize((w0, h0), Image.BILINEAR)
         t = to_tensor(img)  # [3,H,W], [0,1]
         t = normalize_image(t, mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # -> [-1,1]
         tensors.append(t)
