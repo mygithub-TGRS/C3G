@@ -13,6 +13,7 @@ from hydra import compose, initialize_config_dir
 from PIL import Image
 from torchvision import transforms
 
+from src.config import load_typed_root_config
 from src.dataset.shims.normalize_shim import normalize_image
 from src.model.encoder import get_encoder
 
@@ -29,19 +30,22 @@ def list_images(folder: Path) -> List[Path]:
 def load_posefree_encoder(ckpt_path: str, device: str):
     config_dir = str(Path(__file__).resolve().parent / "config")
     with initialize_config_dir(version_base=None, config_dir=config_dir):
-        cfg = compose(
+        cfg_dict = compose(
             config_name="main",
             overrides=[
                 "+training=gaussian_head_multiview",
                 "mode=test",
                 "wandb.mode=disabled",
-                "+model.encoder.feature_dim=0",
-                "+model.encoder.gaussian_feature_dim=0",
             ],
         )
 
+    cfg = load_typed_root_config(cfg_dict)
     enc_cfg = cfg.model.encoder
     assert getattr(enc_cfg, "pose_free", False), "Encoder config must have pose_free=True"
+
+    # Ensure pure Gaussian inference path (no foundation-model features).
+    enc_cfg.feature_dim = 0
+    enc_cfg.gaussian_feature_dim = 0
 
     encoder, _ = get_encoder(enc_cfg)
     encoder = encoder.to(device).eval()
