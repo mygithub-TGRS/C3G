@@ -12,6 +12,7 @@ from typing import List
 import torch
 from PIL import Image
 from torchvision import transforms
+from omegaconf import OmegaConf
 from hydra import compose, initialize_config_dir
 
 from src.model.encoder import get_encoder
@@ -38,13 +39,27 @@ def load_posefree_encoder(ckpt_path: str, device: str):
                 "+training=gaussian_head_multiview",
                 "mode=test",
                 "wandb.mode=disabled",
-                # Inference without foundation model features
-                "+model.encoder.feature_dim=0",
-                "+model.encoder.gaussian_feature_dim=0",
             ],
         )
 
     enc_cfg = cfg.model.encoder
+
+    # The base noposplat.yaml defines a closed struct that lacks VGGT-specific
+    # fields (freeze_backbone, decoder_depth, etc.).  Disable struct mode and
+    # fill in all EncoderVGGTCfg defaults so OmegaConf won't reject them.
+    OmegaConf.set_struct(enc_cfg, False)
+    vggt_defaults = {
+        "freeze_backbone": False,
+        "decoder_depth": 2,
+        "gaussians_per_token": 1,
+        "feature_dim": 0,
+        "gaussian_feature_dim": 0,
+        "different_learnable_tokens": False,
+    }
+    for k, v in vggt_defaults.items():
+        if k not in enc_cfg:
+            enc_cfg[k] = v
+
     assert getattr(enc_cfg, "pose_free", False), "Encoder config must have pose_free=True"
     encoder, _ = get_encoder(enc_cfg)
     encoder = encoder.to(device).eval()
